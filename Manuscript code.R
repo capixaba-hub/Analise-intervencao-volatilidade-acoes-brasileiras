@@ -1,3 +1,13 @@
+
+
+# --- PACOTES NECESSÁRIOS ---
+library(Kendall)
+library(moments)
+library(lmtest)
+library(tseries)
+library(FinTS)
+library(rugarch)
+
 # 1. Extração de Dados e Retornos
 tickers <- c("PETR4.SA", "VALE3.SA", "ITUB4.SA")
 getSymbols(tickers, src = "yahoo", from = "2007-01-01", to = "2026-10-04")
@@ -12,13 +22,6 @@ ret_itub <- na.omit(diff(log(Cl(ITUB4.SA))))
 
 
 
-
-# --- PACOTES NECESSÁRIOS ---
-library(Kendall)
-library(moments)
-library(lmtest)
-library(tseries)
-library(FinTS)
 
 # --- FUNÇÃO PARA CALCULAR ESTATÍSTICAS DESCRITIVAS COMPLETAS ---
 calcular_descritivas <- function(serie, nome_ativo) {
@@ -138,9 +141,6 @@ teste_sazonalidade <- lm(ret_vale ~ dias_semana)
 summary(teste_sazonalidade) # nao apresenta sazonalidade deterministica
 
 
-# Carregue o pacote tseries para os testes de raiz unitária
-library(tseries)
-
 # ==============================================================================
 # 1. TESTE DE TENDÊNCIA ESTOCÁSTICA (Estacionariedade)
 # ==============================================================================
@@ -233,10 +233,6 @@ diagnostico_residuos(arima_vale, "VALE3")
 diagnostico_residuos(arima_itub, "ITUB4")
 
 
-library(rugarch)
-
-# Lembre-se de substituir o 'armaOrder' de cada especificação pelas ordens (p, q) 
-# que você validou na etapa do diagnóstico do ARIMA. 
 # A distribuição 'sstd' (Skew-Student-t) acomoda a assimetria e curtose dos retornos.
 
 # ==============================================================================
@@ -251,15 +247,13 @@ spec_petr <- ugarchspec(
 aparch_petr <- ugarchfit(spec = spec_petr, data = residuals(arima_petr), solver = "hybrid")
 
 cat("\n--- Resumo APARCH(1,1) - PETR4 ---\n")
-show(aparch_petr) # Use 'show' para imprimir o sumário completo no console
-
-plot(aparch_petr, which = 12)
+show(aparch_petr) 
+plot(aparch_petr, which = 3)
 
 # ==============================================================================
 # 2. Ajuste APARCH(1,1) para VALE (VALE3)
 # ==============================================================================
-# Nota: Se você confirmou sazonalidade com as dummies, inclua o argumento:
-# external.regressors = matriz_dummies_dias dentro do mean.model
+
 spec_vale <- ugarchspec(
   variance.model = list(model = "apARCH", garchOrder = c(1, 1)),
   mean.model = list(armaOrder = c(0, 0), include.mean = TRUE), # Substitua pela sua ordem
@@ -291,11 +285,9 @@ show(aparch_itub)
 plot(aparch_itub, which = 3)
 
 
-
-
-library(ggplot2)
-library(rugarch)
-library(ggplot2)
+#------------
+# Gráficos
+#------------
 
 # Função para extrair a volatilidade e gerar o gráfico com as duas linhas de referência
 plotar_volatilidade_completo <- function(fit_aparch, serie_xts, nome_ativo) {
@@ -371,7 +363,7 @@ print(grafico_vale)
 print(grafico_itub)
 
 # ==============================================================================
-# FUNÇÃO PARA EXTRAIR OS PICOS EXTREMOS E QUANTIFICAR A ELEVAÇÃO EM RELAÇÃO À MÉDIA
+# FUNÇÃO PARA EXTRAIR OS PICOS EXTREMOS E QUANTIFICAR A ELEVAÇÃO NAS JANELAS
 # ==============================================================================
 
 estudo_picos_extremos <- function(fit_aparch, serie_xts, nome_ativo, prob_limiar = 0.975, jan_dias = 5) {
@@ -750,11 +742,6 @@ lines(
 )
 
 
-################################
-##############################
-#################################
-###################################
-
 # ---------------------------------------------------------
 # AJUSTE VALE COM INTERVENÇÃO
 # ---------------------------------------------------------
@@ -909,10 +896,6 @@ lines(
   vol_vale,
   lwd = 1.5
 )
-
-
-
-
 
 
 
@@ -1083,17 +1066,9 @@ lines(
 # Residuos 
 ###############
 
-library(rugarch)
-library(FinTS)    # Para teste ARCH-LM alternativo
-library(tseries)  # Para testes de normalidade/estacionariedade
-
-# Consideração: 'fit_aparch' é o objeto retornado pela função ugarchfit()
-
 # ==============================================================================
 # CÓDIGO R: TESTES DE DIAGNÓSTICO COM 36 LAGS (PETR4, VALE3, ITUB4)
 # ==============================================================================
-library(rugarch)
-library(FinTS)
 
 # Função para extrair os 3 testes específicos fixados em 36 defasagens
 testes_diagnostico_36 <- function(fit_obj, nome_ativo) {
